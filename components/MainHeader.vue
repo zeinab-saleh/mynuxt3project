@@ -27,8 +27,14 @@
         <div class="d-flex align-items-center flex-nowrap mb-2 mb-sm-0">
           <input type="text" class="form-control form-control-sm border-dark me-2"
                  style="width:70px;" :placeholder="$t('search')">
-          <img src="/icons/heart_11613265.png" class="rounded-circle shadow-sm me-2 icon-small">
-          <img src="/icons/login.png" class="rounded-circle shadow-sm me-2 icon-small">
+          <!-- تعديل الرابط هنا -->
+          <NuxtLink to="/favorites">
+            <img src="/icons/heart_11613265.png" class="rounded-circle shadow-sm me-2 icon-small">
+          </NuxtLink>
+          <!-- تعديل الرابط هنا -->
+          <NuxtLink to="/login">
+            <img src="/icons/login.png" class="rounded-circle shadow-sm me-2 icon-small">
+          </NuxtLink>
           <NuxtLink to="/cart" class="position-relative">
             <img src="/icons/cart.png" class="rounded-circle shadow-sm icon-small">
             <span v-if="cartCount>0" class="badge bg-danger position-absolute top-0 start-100 translate-middle">

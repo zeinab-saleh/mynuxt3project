@@ -1,73 +1,125 @@
 <template>
-  <section class="favorite-section">
-    <h1>Your Favorites</h1>
-    <div v-if="favorites.length > 0" class="favorite-items">
-      <div v-for="(item, index) in favorites" :key="item.id" class="favorite-item">
-        <img :src="item.image" :alt="item.title" class="favorite-item-img"/>
+  <section class="cart-section">
+    <h1>Your Cart</h1>
+    <div v-if="cart.length > 0" class="cart-items">
+      <div v-for="(item, index) in cart" :key="item.id" class="cart-item">
+        <img :src="item.image" :alt="item.title" />
         <div class="details">
           <h3>{{ item.title }}</h3>
           <p class="price">${{ item.price }}</p>
-          <button class="remove-btn" @click="removeFromFavorites(index)">Remove from Favorites</button>
+          <div class="quantity-control">
+            <button @click="decreaseQuantity(index)">-</button>
+            <span>{{ item.quantity }}</span>
+            <button @click="increaseQuantity(index)">+</button>
+          </div>
+          <button class="remove-btn" @click="removeItem(index)">Remove</button>
         </div>
+      </div>
+      <div class="cart-summary">
+        <h2>Total: ${{ totalPrice }}</h2>
       </div>
     </div>
     <div v-else>
-      <p>Your favorites list is empty.</p>
+      <p>Your cart is empty.</p>
     </div>
   </section>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
+import { useRouter } from 'vue-router';
 
-const favorites = ref([]);
+const cart = ref([]);
+const router = useRouter();
 
-// استرجاع المنتجات المفضلة من localStorage عند تحميل الصفحة
+// التعامل مع زر الرجوع في المتصفح
+const handlePopState = () => {
+  router.replace('/'); // عند الضغط على رجوع → الصفحة الرئيسية
+};
+
 onMounted(() => {
-  const storedFavorites = JSON.parse(localStorage.getItem('favorites')) || [];
-  favorites.value = storedFavorites;
+  const storedCart = JSON.parse(localStorage.getItem('cart')) || [];
+  cart.value = storedCart.map(item => ({ ...item, quantity: item.quantity || 1 }));
+
+  window.addEventListener('popstate', handlePopState);
 });
 
-// دالة لإزالة المنتج من المفضلة
-const removeFromFavorites = (index) => {
-  favorites.value.splice(index, 1);
-  localStorage.setItem('favorites', JSON.stringify(favorites.value));
+onBeforeUnmount(() => {
+  window.removeEventListener('popstate', handlePopState);
+});
+
+// تحديث localStorage
+const updateCartStorage = () => {
+  localStorage.setItem('cart', JSON.stringify(cart.value));
 };
+
+const increaseQuantity = (index) => {
+  cart.value[index].quantity++;
+  updateCartStorage();
+};
+
+const decreaseQuantity = (index) => {
+  if (cart.value[index].quantity > 1) {
+    cart.value[index].quantity--;
+    updateCartStorage();
+  }
+};
+
+const removeItem = (index) => {
+  cart.value.splice(index, 1);
+  updateCartStorage();
+};
+
+const totalPrice = computed(() =>
+  cart.value.reduce((sum, item) => sum + item.price * item.quantity, 0).toFixed(2)
+);
 </script>
 
 <style scoped>
-.favorite-section {
+.cart-section {
   padding: 40px 20px;
   max-width: 900px;
   margin: auto;
 }
-.favorite-items {
+.cart-items {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   gap: 20px;
-  justify-content: space-evenly;
 }
-.favorite-item {
+.cart-item {
+  display: flex;
+  gap: 20px;
   background: #fff;
   padding: 15px;
   border-radius: 10px;
   box-shadow: 0 0 10px rgba(0,0,0,0.1);
-  width: 250px;
-  text-align: center;
-  margin-bottom: 20px;
 }
-.favorite-item-img {
-  width: 100%;
-  height: 200px;
+.cart-item img {
+  width: 120px;
+  height: 120px;
   object-fit: contain;
 }
 .details h3 {
-  margin: 10px 0;
-  font-size: 1.2rem;
+  margin: 0 0 10px 0;
 }
 .price {
   font-weight: 700;
-  color: #111;
+  margin-bottom: 10px;
+}
+.quantity-control {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.quantity-control button {
+  width: 30px;
+  height: 30px;
+  border: none;
+  background: #007bff;
+  color: #fff;
+  border-radius: 5px;
+  cursor: pointer;
 }
 .remove-btn {
   background: #dc3545;
@@ -77,7 +129,10 @@ const removeFromFavorites = (index) => {
   border-radius: 5px;
   cursor: pointer;
 }
-.remove-btn:hover {
-  background: #c82333;
+.cart-summary {
+  text-align: right;
+  margin-top: 20px;
+  font-size: 1.2rem;
+  font-weight: bold;
 }
 </style>
